@@ -1,0 +1,270 @@
+{
+  "Resources": {
+    "makecrrepoBCA30617": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "ImageTagMutability": "IMMUTABLE",
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Only retain 200 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":200},\"action\":{\"type\":\"expire\"}}]}"
+        },
+        "RepositoryName": "ecr_repomak"
+      },
+      "UpdateReplacePolicy": "Retain",
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "aws:cdk:path": "Sprint6MAKECRStack/mak_ecr_repo/Resource"
+      }
+    },
+    "makf1CustomResource690AC46A": {
+      "Type": "Custom::CDKBucketDeployment",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiB28EAD8E4",
+            "Arn"
+          ]
+        },
+        "SrcImage": {
+          "Fn::Join": [
+            "",
+            [
+              "docker://",
+              {
+                "Fn::Sub": "315997497220.dkr.ecr.us-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-315997497220-us-west-2:b05cc0ddde308845e6ad1e92858deae412ba82d4d75845c15d85d1c3559a0024"
+              }
+            ]
+          ]
+        },
+        "DestImage": {
+          "Fn::Join": [
+            "",
+            [
+              "docker://",
+              {
+                "Fn::Select": [
+                  4,
+                  {
+                    "Fn::Split": [
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "makecrrepoBCA30617",
+                          "Arn"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              ".dkr.ecr.",
+              {
+                "Fn::Select": [
+                  3,
+                  {
+                    "Fn::Split": [
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "makecrrepoBCA30617",
+                          "Arn"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              ".",
+              {
+                "Ref": "AWS::URLSuffix"
+              },
+              "/",
+              {
+                "Ref": "makecrrepoBCA30617"
+              },
+              ":latest"
+            ]
+          ]
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "Sprint6MAKECRStack/makf1/CustomResource/Default"
+      }
+    },
+    "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRole8C8B0491": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "Sprint6MAKECRStack/Custom::CDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiB/ServiceRole/Resource"
+      }
+    },
+    "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRoleDefaultPolicy280095F8": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:GetRepositoryPolicy",
+                "ecr:DescribeRepositories",
+                "ecr:ListImages",
+                "ecr:DescribeImages",
+                "ecr:BatchGetImage",
+                "ecr:ListTagsForResource",
+                "ecr:DescribeImageScanFindings",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": "*"
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRoleDefaultPolicy280095F8",
+        "Roles": [
+          {
+            "Ref": "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRole8C8B0491"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "Sprint6MAKECRStack/Custom::CDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiB/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiB28EAD8E4": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-315997497220-us-west-2",
+          "S3Key": "de77077bd7f1b9712d3b57bc478b8d426218bc84a59ad45b476fa4c15891c394.zip"
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRole8C8B0491",
+            "Arn"
+          ]
+        },
+        "Handler": "main",
+        "MemorySize": 512,
+        "Runtime": "go1.x",
+        "Timeout": 900
+      },
+      "DependsOn": [
+        "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRoleDefaultPolicy280095F8",
+        "CustomCDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiBServiceRole8C8B0491"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "Sprint6MAKECRStack/Custom::CDKECRDeploymentbd07c930edb94112a20f03f096f53666512MiB/Resource",
+        "aws:asset:path": "asset.de77077bd7f1b9712d3b57bc478b8d426218bc84a59ad45b476fa4c15891c394",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Analytics": "v2:deflate64:H4sIAAAAAAAA/02P0U7DMAxFv2XvrgdUYtojG0La21Q+YMoyU0KTeIodoanqv5M1G/Dkk6voHvsJH1f4sDDf0tjT0Hh3xPFdjR2gRIeRbMKxozOLU04X2H7Ef68/3BihCcrvgxEhFXxlO1DaBdPTyzUBb8LxZEq5i70n5fiWo1XHEX6hlN95AmdCMbOn2Xmde/bOzitUmkDau646pMVNLl6t68xhOaYvSthmUQ4dCedka+mNJ9hf9JPjssVnXC++xLkm5aguEHZ1/gAD1BVyJgEAAA=="
+      },
+      "Metadata": {
+        "aws:cdk:path": "Sprint6MAKECRStack/CDKMetadata/Default"
+      }
+    }
+  },
+  "Outputs": {
+    "ExportsOutputRefmakecrrepoBCA30617C0F8DD37": {
+      "Value": {
+        "Ref": "makecrrepoBCA30617"
+      },
+      "Export": {
+        "Name": "Sprint6MAKECRStack:ExportsOutputRefmakecrrepoBCA30617C0F8DD37"
+      }
+    },
+    "ExportsOutputFnGetAttmakecrrepoBCA30617Arn0C4AF472": {
+      "Value": {
+        "Fn::GetAtt": [
+          "makecrrepoBCA30617",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "Sprint6MAKECRStack:ExportsOutputFnGetAttmakecrrepoBCA30617Arn0C4AF472"
+      }
+    }
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Type": "AWS::SSM::Parameter::Value<String>",
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+    }
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  {
+                    "Ref": "BootstrapVersion"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+        }
+      ]
+    }
+  }
+}
